@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prestaterre — Questionnaire financier MOA V0.29</title>
+  <title>Prestaterre — Questionnaire financier MOA V0.36</title>
   <style>
     :root{
       --forest:#173f35; --forest-2:#0f2f28; --sage:#dce9e2; --mint:#eef6f1;
@@ -223,12 +223,22 @@
     .dpgf-pdf-page{position:relative;margin:0 auto;background:#fff;box-shadow:0 8px 28px rgba(15,47,40,.14);width:max-content;max-width:100%}
     #dpgfPdfCanvas{display:block;max-width:100%;height:auto}
     .dpgf-pdf-text-layer{position:absolute;inset:0;pointer-events:auto;overflow:hidden}
-    .dpgf-pdf-token{position:absolute;color:transparent;cursor:crosshair;border-radius:2px;user-select:none;line-height:1;z-index:2}
-    .dpgf-pdf-token:hover{background:rgba(23,63,53,.12);outline:1px solid rgba(23,63,53,.35)}
-    .dpgf-pdf-token.sel-amount{background:rgba(22,163,74,.30);outline:2px solid rgba(22,101,52,.75)}
-    .dpgf-pdf-token.sel-lot{background:rgba(37,99,235,.25);outline:2px solid rgba(29,78,216,.72)}
-    .dpgf-pdf-token.sel-amount.sel-lot{background:linear-gradient(135deg,rgba(22,163,74,.32) 0 50%,rgba(37,99,235,.30) 50% 100%)}
+    .dpgf-pdf-token{position:absolute;color:transparent;cursor:crosshair;border-radius:2px;user-select:none;line-height:1;z-index:2;touch-action:none}
+    .dpgf-pdf-token:hover{background:rgba(23,63,53,.10);outline:1px solid rgba(23,63,53,.48);outline-offset:-1px}
+    .dpgf-pdf-text-layer.mode-amount .dpgf-pdf-token:hover{background:rgba(22,163,74,.18);outline-color:rgba(22,101,52,.72)}
+    .dpgf-pdf-text-layer.mode-lot .dpgf-pdf-token:hover{background:rgba(37,99,235,.16);outline-color:rgba(29,78,216,.70)}
+    .dpgf-pdf-token.sel-amount{background:rgba(22,163,74,.32);outline:2px solid rgba(22,101,52,.82);outline-offset:-1px}
+    .dpgf-pdf-token.sel-lot{background:rgba(37,99,235,.27);outline:2px solid rgba(29,78,216,.80);outline-offset:-1px}
+    .dpgf-pdf-token.sel-amount.sel-lot{background:linear-gradient(135deg,rgba(22,163,74,.34) 0 50%,rgba(37,99,235,.32) 50% 100%)}
     .dpgf-viewer-hint{margin-top:7px;line-height:1.4}
+    body.dpgf-fullscreen-open{overflow:hidden}
+    .dpgf-visual-workspace.dpgf-fullscreen{position:fixed;inset:0;z-index:100000;margin:0;padding:14px;background:#f5f8f6;grid-template-columns:minmax(0,1fr) 350px;gap:14px;overflow:hidden}
+    .dpgf-visual-workspace.dpgf-fullscreen .dpgf-document-zone{display:flex;flex-direction:column;min-height:0;height:calc(100vh - 28px)}
+    .dpgf-visual-workspace.dpgf-fullscreen .dpgf-viewer-toolbar{flex:0 0 auto}
+    .dpgf-visual-workspace.dpgf-fullscreen .dpgf-pdf-stage{flex:1 1 auto;height:auto;min-height:0;max-height:none;overflow:auto}
+    .dpgf-visual-workspace.dpgf-fullscreen .dpgf-pick-panel{position:static;max-height:calc(100vh - 28px);height:fit-content;overflow-y:auto}
+    .dpgf-fullscreen-badge{display:none}
+    .dpgf-visual-workspace.dpgf-fullscreen .dpgf-fullscreen-badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:var(--forest);color:#fff;font-size:10px;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
     .dpgf-pick-panel{position:sticky;top:12px;border:1px solid #8fb6a4;background:#f4faf6;border-radius:16px;padding:14px;box-shadow:0 10px 26px rgba(15,47,40,.10);display:grid;gap:11px;max-height:78vh;overflow-y:auto}
     .dpgf-pick-title{font-weight:900;color:var(--forest);font-size:15px}.dpgf-mode-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}
     .dpgfPickMode.active{box-shadow:0 0 0 3px rgba(23,63,53,.10)}
@@ -237,7 +247,7 @@
     .dpgf-selection-card strong{display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}.dpgf-selection-card.amount{border-left:4px solid #16a34a}.dpgf-selection-card.lot{border-left:4px solid #2563eb}
     .mini-link{position:absolute;right:8px;top:9px;border:0;background:transparent;color:var(--forest);font-size:10px;font-weight:800;cursor:pointer;text-decoration:underline}
     #dpgfPickStatus{min-height:16px;line-height:1.35}.dpgf-result-source{font-size:11px;color:var(--muted);line-height:1.35}
-    @media(max-width:1050px){.dpgf-visual-workspace{grid-template-columns:1fr}.dpgf-pick-panel{position:static;max-height:none}.dpgf-pdf-stage{height:65vh;min-height:440px}}
+    @media(max-width:1050px){.dpgf-visual-workspace{grid-template-columns:1fr}.dpgf-pick-panel{position:static;max-height:none}.dpgf-pdf-stage{height:65vh;min-height:440px}.dpgf-visual-workspace.dpgf-fullscreen{grid-template-columns:1fr;overflow:auto}.dpgf-visual-workspace.dpgf-fullscreen .dpgf-document-zone{height:auto;min-height:70vh}.dpgf-visual-workspace.dpgf-fullscreen .dpgf-pick-panel{max-height:none}}
 
     /* Identité Prestaterre */
     .brand--logo{display:block;margin-bottom:16px}
@@ -247,25 +257,67 @@
     aside{overflow-y:auto}
     .aside-note{display:block!important;margin-top:14px;padding:9px 7px;color:#b9cbc4;font-size:9.5px;line-height:1.35;border-top:1px solid rgba(255,255,255,.12)}
 
-    /* Étape 2 - animation */
-    .workflow-demo{position:relative;min-height:300px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(135deg,#f8fbf9,#eef6f1);display:grid;grid-template-columns:1fr auto 1.15fr auto 1fr;align-items:center;gap:16px;padding:30px 28px;overflow:hidden}
-    .workflow-file{position:absolute;left:7%;top:25%;width:104px;height:78px;border-radius:13px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);display:grid;place-items:center;padding:9px;text-align:center;animation:workflowDrop 6s ease-in-out infinite}
-    .workflow-file span{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--forest);background:var(--sage);padding:3px 6px;border-radius:999px}
-    .workflow-file b{font-size:11px}
-    .workflow-file--xls{animation-delay:3s;opacity:0}
-    .workflow-drop,.workflow-select,.workflow-validate{border:1px solid #cfe0d8;background:#fff;border-radius:16px;padding:18px;text-align:center;min-height:150px;display:grid;place-items:center;align-content:center;gap:7px}
-    .workflow-drop{grid-column:1}.workflow-select{grid-column:3}.workflow-validate{grid-column:5}
-    .workflow-drop-icon{font-size:34px;animation:workflowPulse 1.3s ease-in-out infinite}
-    .workflow-arrow{font-size:28px;color:#7fa08f;font-weight:900}
-    .workflow-highlight{padding:6px 9px;border-radius:8px;font-size:11px;font-weight:900;animation:workflowHighlight 2.4s ease-in-out infinite}
-    .workflow-highlight--1{background:#dcfce7;color:#166534}.workflow-highlight--2{background:#dbeafe;color:#1d4ed8;animation-delay:.5s}
-    .workflow-validate span{font-size:34px;color:var(--ok);animation:workflowPulse 1.5s ease-in-out infinite}
-    .workflow-demo small{color:var(--muted);line-height:1.35}
-    .workflow-legend{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-    .workflow-legend>div{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fbfcfb}.workflow-legend b{display:block;color:var(--forest);margin-bottom:3px}.workflow-legend span{font-size:12px;color:var(--muted);line-height:1.35}
-    @keyframes workflowDrop{0%,10%{transform:translate(0,0) scale(.96);opacity:0}18%{opacity:1}40%{transform:translate(145px,75px) scale(.9);opacity:1}52%,100%{transform:translate(145px,75px) scale(.75);opacity:0}}
-    @keyframes workflowPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
-    @keyframes workflowHighlight{0%,100%{box-shadow:0 0 0 0 rgba(22,101,52,0)}50%{box-shadow:0 0 0 5px rgba(22,101,52,.10)}}
+    /* Étape 2 - mode d’emploi visuel */
+    .howto-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .howto-card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#fbfdfc,#f3f8f5);padding:18px;box-shadow:0 10px 26px rgba(23,63,53,.06)}
+    .howto-card h3{margin:0 0 6px;font-size:18px;color:var(--forest);display:flex;align-items:center;gap:10px}
+    .howto-card h3 .icon{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:#fff;border:1px solid #d8e5de;box-shadow:0 6px 14px rgba(23,63,53,.08)}
+    .howto-card>p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.45}
+    .howto-visual{position:relative;border:1px solid #dbe7e1;border-radius:16px;background:#fff;min-height:235px;padding:14px;overflow:hidden}
+    .howto-ribbon{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--sage);color:var(--forest);font-size:10px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px}
+    .pdf-mini-window{position:relative;height:175px;border:1px solid #d8e2dd;border-radius:14px;background:linear-gradient(180deg,#f6f7f8,#eceff1);padding:12px 12px 12px 14px;overflow:hidden}
+    .pdf-mini-page{position:absolute;left:14px;top:16px;width:58%;height:145px;border-radius:10px;background:#fff;box-shadow:0 10px 20px rgba(0,0,0,.10);padding:12px}
+    .pdf-mini-page:before{content:'';display:block;height:9px;width:65%;background:#eef3f0;border-radius:999px;margin-bottom:10px}
+    .pdf-mini-line{height:9px;border-radius:999px;background:#edf2ef;margin-bottom:8px}
+    .pdf-mini-line.w70{width:70%}.pdf-mini-line.w82{width:82%}.pdf-mini-line.w54{width:54%}.pdf-mini-line.w88{width:88%}.pdf-mini-line.w60{width:60%}
+    .pdf-mini-tag{position:absolute;padding:7px 10px;border-radius:10px;font-size:11px;font-weight:900;box-shadow:0 8px 18px rgba(0,0,0,.08);animation:floatPulse 2.8s ease-in-out infinite}
+    .pdf-mini-tag.amount{left:36%;top:68px;background:#dcfce7;color:#166534;border:1px solid #95d5ad}
+    .pdf-mini-tag.lot{left:30%;top:112px;background:#dbeafe;color:#1d4ed8;border:1px solid #9dc2ff;animation-delay:.35s}
+    .pdf-mini-side{position:absolute;right:10px;top:18px;width:34%;display:grid;gap:10px}
+    .pdf-mini-side .mini-pill{border-radius:12px;border:1px solid #d8e5de;background:#f7fbf9;padding:10px}
+    .pdf-mini-side .mini-pill b{display:block;font-size:11px;color:var(--forest);margin-bottom:4px}
+    .pdf-mini-side .mini-pill span{display:block;font-size:11px;color:#5c6d66;line-height:1.3}
+    .excel-mini-window{position:relative;height:175px;border:1px solid #d8e2dd;border-radius:14px;background:#fbfcfb;padding:12px;overflow:hidden}
+    .excel-bubbles{display:flex;gap:8px;margin-bottom:10px}
+    .excel-bubble{padding:5px 10px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+    .excel-bubble.amount{background:#dcfce7;color:#166534}.excel-bubble.lot{background:#dbeafe;color:#1d4ed8}
+    .excel-grid-mini{display:grid;grid-template-columns:28px 1.25fr 1fr .9fr;gap:4px;align-items:stretch}
+    .excel-grid-mini div{min-height:24px;border-radius:8px;border:1px solid #e6ece9;background:#fff;font-size:10px;padding:5px 6px;display:flex;align-items:center}
+    .excel-grid-mini .head{background:#f2f6f4;font-weight:900;color:#52645d}
+    .excel-grid-mini .chk{justify-content:center;background:#f7faf8}
+    .excel-grid-mini .lotcol{background:#eef5ff;border-color:#c8dcfb}
+    .excel-grid-mini .amountcol{background:#eefbf2;border-color:#bfe0c8}
+    .excel-grid-mini .sel{box-shadow:0 0 0 2px rgba(23,63,53,.10) inset;font-weight:800}
+    .excel-cursor{position:absolute;right:22px;bottom:22px;font-size:24px;animation:cursorTap 1.8s ease-in-out infinite}
+    .howto-steps{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+    .howto-steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;padding:10px 11px;border:1px solid #dfe7e3;background:#fff;border-radius:12px}
+    .howto-steps li b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--forest);color:#fff;font-size:12px}
+    .howto-steps li span{font-size:12.5px;line-height:1.42;color:#51615a}
+    .howto-examples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+    .howto-example{border:1px solid #dfe7e3;border-radius:14px;background:#fff;padding:12px;display:grid;gap:10px}
+    .howto-example h4{margin:0;font-size:13px;color:var(--forest);display:flex;align-items:center;gap:8px}
+    .howto-example h4 .dot{width:10px;height:10px;border-radius:50%;background:var(--forest)}
+    .howto-example p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+    .example-flow{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+    .example-doc,.example-result{border:1px solid #dbe4df;border-radius:12px;background:#f8fbf9;padding:10px;min-height:86px}
+    .example-doc{position:relative;overflow:hidden}
+    .example-doc-lines{display:grid;gap:6px}
+    .example-doc-lines div{height:8px;border-radius:999px;background:#e6eeea}
+    .example-doc-lines div.short{width:52%}.example-doc-lines div.mid{width:72%}.example-doc-lines div.long{width:88%}
+    .example-highlight{display:inline-block;padding:5px 8px;border-radius:8px;font-size:11px;font-weight:900;margin:3px 4px 0 0}
+    .example-highlight.amount{background:#dcfce7;color:#166534}.example-highlight.lot{background:#dbeafe;color:#1d4ed8}
+    .example-arrow{font-size:20px;font-weight:900;color:#8aa496;text-align:center}
+    .example-result .recap-line{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .recap-chip{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900}
+    .recap-chip.cat{background:#e8f0ec;color:var(--forest)}.recap-chip.amount{background:#dcfce7;color:#166534}.recap-chip.lot{background:#dbeafe;color:#1d4ed8}
+    @media(max-width:760px){.howto-examples{grid-template-columns:1fr}.example-flow{grid-template-columns:1fr;}.example-arrow{transform:rotate(90deg)}}
+    .howto-tips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+    .howto-tips .tip{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfcfb}
+    .howto-tips .tip b{display:block;color:var(--forest);margin-bottom:4px}
+    .howto-tips .tip span{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+    @keyframes floatPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    @keyframes cursorTap{0%,100%{transform:translate(0,0) scale(1)}45%{transform:translate(-10px,-8px) scale(1.04)}60%{transform:translate(-10px,-8px) scale(.96)}}
+    @media(max-width:980px){.howto-grid,.howto-tips{grid-template-columns:1fr}}
 
     /* Toggle PDF / Excel */
     .finance-toggle-shell{display:grid;place-items:center;margin:22px 0 18px}
@@ -280,6 +332,10 @@
     .excel-source-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr);gap:14px;margin-bottom:14px}
     .excel-drop{border:2px dashed #9db7ab;border-radius:14px;padding:20px;text-align:center;background:#f4faf6;transition:.2s}
     .excel-drop.dragover{border-color:var(--forest);background:#e3f0e9;box-shadow:0 0 0 4px rgba(23,63,53,.06)}
+    .excel-sheet-picker{display:grid;grid-template-columns:minmax(180px,320px) minmax(0,1fr);gap:12px;align-items:end;margin:-2px 0 14px;padding:12px 14px;border:1px solid #bfd5ca;background:#f4faf6;border-radius:14px}
+    .excel-sheet-picker label{margin-bottom:5px;color:var(--forest)}
+    .excel-sheet-picker .tiny{align-self:center;margin-top:18px}
+    @media(max-width:760px){.excel-sheet-picker{grid-template-columns:1fr}.excel-sheet-picker .tiny{margin-top:0}}
     .sheet-paste-layout{grid-template-columns:minmax(0,1fr) 310px}
     .sheet-grid-wrap{max-height:66vh}
     .sheet-selection-box{top:12px;border:1px solid #8fb6a4;background:#f4faf6;box-shadow:0 10px 26px rgba(15,47,40,.10);display:grid;gap:11px;max-height:78vh;overflow-y:auto}
@@ -300,6 +356,14 @@
     .sheet-grid td.excel-highlight-amount{background:#dcfce7!important;outline:2px solid #16a34a;outline-offset:-2px}
     .sheet-grid td.excel-highlight-lot{background:#dbeafe!important;outline:2px solid #2563eb;outline-offset:-2px}
     .sheet-grid td.excel-highlight-amount.excel-highlight-lot{background:linear-gradient(135deg,#dcfce7 0 50%,#dbeafe 50% 100%)!important}
+    .sheet-grid td.excel-formula-cell{background:#fff8e8!important;box-shadow:inset 0 0 0 1px #e7c66b;font-weight:800}
+    .sheet-grid td.excel-formula-cell.excel-amount-col{background:#eefbf2!important}
+    .sheet-grid td.excel-formula-cell.excel-lot-col{background:#eef5ff!important}
+    .sheet-grid td.excel-formula-cell.excel-highlight-amount{background:#dcfce7!important}
+    .sheet-grid td.excel-formula-cell.excel-highlight-lot{background:#dbeafe!important}
+    .excel-formula-badge{display:inline-flex;align-items:center;margin-left:6px;padding:2px 5px;border-radius:999px;background:#f7e5a3;color:#6f520b;font-size:8px;font-weight:900;vertical-align:middle}
+    .excel-formula-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;color:#6d5719;font-size:11px;line-height:1.35}
+    .excel-formula-summary .formula-chip{display:inline-flex;align-items:center;gap:4px;background:#fff7dc;border:1px solid #ead18a;border-radius:999px;padding:4px 8px;font-weight:900}
     .sheet-grid.manual-highlight-mode td.sheet-cell{cursor:crosshair}
     .sheet-grid.manual-highlight-mode th[data-col]{cursor:default}
     .sheet-grid.manual-highlight-mode .row-head{background:#f7faf8}
@@ -354,7 +418,7 @@
   </aside>
 
   <main>
-    <div class="topbar"><div><h1>Questionnaire financier d'opération</h1><p class="subtitle">Collecte des coûts travaux, études et acquisition pour l'Observatoire Prestaterre</p></div><div class="badge">MAQUETTE V0.29</div></div>
+    <div class="topbar"><div><h1>Questionnaire financier d'opération</h1><p class="subtitle">Collecte des coûts travaux, études et acquisition pour l'Observatoire Prestaterre</p></div><div class="badge">MAQUETTE V0.36</div></div>
     <div class="progress"><div id="progressBar"></div></div>
 
     <section class="section active" data-step="1">
@@ -379,33 +443,148 @@
     <section class="section" data-step="2">
       <div class="card">
         <h2>2. Comment renseigner les données financières ?</h2>
-        <p class="help">Le principe est volontairement simple : vous déposez un PDF ou un Excel, vous choisissez les montants à retenir, puis vous les rattachez au bon poste financier.</p>
-        <div class="workflow-demo" aria-label="Animation explicative du fonctionnement">
-          <div class="workflow-file workflow-file--pdf"><span>PDF</span><b>Devis / DPGF</b></div>
-          <div class="workflow-file workflow-file--xls"><span>XLS</span><b>Excel / Sheets</b></div>
-          <div class="workflow-drop">
-            <div class="workflow-drop-icon">↓</div>
-            <strong>Déposez votre document</strong>
-            <small>Le document reste visible pendant la sélection.</small>
+        <p class="help">Deux méthodes sont possibles : <strong>PDF</strong> ou <strong>Excel / tableau copié-collé</strong>. Dans les deux cas, l’objectif est le même : identifier le <strong>montant HT</strong>, le <strong>lot / poste</strong>, puis valider la donnée pour l’ajouter au récapitulatif financier.</p>
+
+        <div class="howto-grid">
+          <div class="howto-card">
+            <h3><span class="icon">📄</span>Mode PDF</h3>
+            <p>Déposez un ou plusieurs PDF, affichez la page utile, puis utilisez le panneau de droite pour surligner le montant et le lot directement dans le document.</p>
+            <div class="howto-visual" aria-label="Guide visuel mode PDF">
+              <div class="howto-ribbon">Étape par étape</div>
+              <div class="pdf-mini-window">
+                <div class="pdf-mini-page">
+                  <div class="pdf-mini-line w82"></div>
+                  <div class="pdf-mini-line w70"></div>
+                  <div class="pdf-mini-line w88"></div>
+                  <div class="pdf-mini-line w60"></div>
+                  <div class="pdf-mini-line w54"></div>
+                  <div class="pdf-mini-line w70"></div>
+                </div>
+                <div class="pdf-mini-tag amount">Montant HT</div>
+                <div class="pdf-mini-tag lot">Lot / poste</div>
+                <div class="pdf-mini-side">
+                  <div class="mini-pill"><b>1. Choisir « Valeur HT »</b><span>Cliquez sur le nombre à remonter dans le PDF.</span></div>
+                  <div class="mini-pill"><b>2. Choisir « N° / nom du lot »</b><span>Cliquez ensuite sur le libellé du lot correspondant.</span></div>
+                  <div class="mini-pill"><b>3. Ajouter la donnée</b><span>Vérifiez, classez la ligne puis validez.</span></div>
+                </div>
+              </div>
+            </div>
+            <ol class="howto-steps">
+              <li><b>1</b><span>Glissez le PDF dans la zone de dépôt, puis choisissez le document affiché et la page à analyser.</span></li>
+              <li><b>2</b><span>Pour travailler plus confortablement, utilisez <strong>⛶ Plein écran</strong>. Le PDF occupe alors presque tout l’écran et reste ajusté automatiquement à la largeur disponible.</span></li>
+              <li><b>3</b><span>Cliquez sur <strong>1. Valeur HT</strong>, puis directement sur le montant. Les nombres sont découpés en zones fines pour éviter de sélectionner toute la ligne. Vous pouvez aussi maintenir le clic et glisser sur plusieurs fragments.</span></li>
+              <li><b>4</b><span>Cliquez sur <strong>2. N° / nom du lot</strong>, puis sur le libellé. Pour un libellé composé de plusieurs mots, maintenez le clic et glissez sur les mots à conserver, ou utilisez <strong>Maj / Ctrl / Cmd</strong> pour compléter la sélection.</span></li>
+              <li><b>5</b><span>Choisissez la <strong>catégorie financière</strong>, ajoutez un commentaire si nécessaire, puis cliquez sur <strong>Ajouter la donnée financière</strong>.</span></li>
+            </ol>
+            <div class="howto-examples">
+              <div class="howto-example">
+                <h4><span class="dot"></span>Exemple PDF : ce que je surligne</h4>
+                <div class="example-flow">
+                  <div class="example-doc">
+                    <div class="example-doc-lines">
+                      <div class="long"></div><div class="mid"></div><div class="short"></div>
+                    </div>
+                    <div style="margin-top:8px">
+                      <span class="example-highlight amount">483 950,83 € HT</span>
+                      <span class="example-highlight lot">Lot 12 - Électricité</span>
+                    </div>
+                  </div>
+                  <div class="example-arrow">→</div>
+                  <div class="example-result">
+                    <strong style="font-size:12px;color:var(--forest)">Ligne créée</strong>
+                    <div class="recap-line">
+                      <span class="recap-chip lot">Lot 12 - Électricité</span>
+                      <span class="recap-chip amount">483 950,83 €</span>
+                      <span class="recap-chip cat">Travaux</span>
+                    </div>
+                  </div>
+                </div>
+                <p>Dans le PDF, je surligne d’abord le <strong>montant HT</strong>, puis le <strong>lot</strong>. La ligne validée rejoint ensuite le récapitulatif.</p>
+              </div>
+            </div>
           </div>
-          <div class="workflow-arrow">→</div>
-          <div class="workflow-select">
-            <div class="workflow-highlight workflow-highlight--1">483 950,83 €</div>
-            <div class="workflow-highlight workflow-highlight--2">Lot 12 - Électricité</div>
-            <strong>Sélectionnez</strong>
-            <small>PDF : surlignez la valeur et le lot.<br>Excel : repérez les colonnes Lot / Montant et cochez les lignes, ou utilisez le surlignage manuel comme pour le PDF.</small>
-          </div>
-          <div class="workflow-arrow">→</div>
-          <div class="workflow-validate">
-            <span>✓</span>
-            <strong>Classez et validez</strong>
-            <small>Travaux, études, acquisition, assurances, taxes, financement…</small>
+
+          <div class="howto-card">
+            <h3><span class="icon">📊</span>Mode Excel / tableau copié-collé</h3>
+            <p>Vous pouvez soit déposer un fichier Excel, soit coller un tableau depuis Excel / Google Sheets. Le tableau s’affiche ensuite dans l’outil, avec deux façons de remonter les données.</p>
+            <div class="howto-visual" aria-label="Guide visuel mode Excel">
+              <div class="howto-ribbon">Deux méthodes possibles</div>
+              <div class="excel-mini-window">
+                <div class="excel-bubbles">
+                  <div class="excel-bubble amount">Montant</div>
+                  <div class="excel-bubble lot">Lot</div>
+                </div>
+                <div class="excel-grid-mini">
+                  <div class="head chk">✓</div>
+                  <div class="head lotcol">Lot</div>
+                  <div class="head amountcol">Montant</div>
+                  <div class="head">Observation</div>
+                  <div class="chk"><input type="checkbox" checked disabled></div>
+                  <div class="lotcol sel">Lot 03 - CVC</div>
+                  <div class="amountcol sel">48 320,00 €</div>
+                  <div>ligne cochée</div>
+                  <div class="chk"><input type="checkbox" disabled></div>
+                  <div class="lotcol">Lot 12 - Élec.</div>
+                  <div class="amountcol">83 750,00 €</div>
+                  <div>surlignage possible</div>
+                </div>
+                <div class="excel-cursor">🖱️</div>
+              </div>
+            </div>
+            <ol class="howto-steps">
+              <li><b>1</b><span>Déposez un fichier Excel <strong>ou</strong> collez votre tableau dans la zone dédiée. Si le fichier contient plusieurs feuilles, choisissez d’abord la <strong>feuille du classeur</strong> dans le menu déroulant ; son contenu s’affiche ensuite dans la grille.</span></li>
+              <li><b>2</b><span>Première méthode : cliquez sur la bulle <strong>Lot</strong>, puis sur la colonne contenant les noms de lots ; cliquez sur la bulle <strong>Montant</strong>, puis sur la colonne des montants.</span></li>
+              <li><b>3</b><span>Quand les colonnes sont bien repérées, cochez la ligne voulue à gauche : le système remonte automatiquement le lot et le montant de cette ligne.</span></li>
+              <li><b>4</b><span>Deuxième méthode : utilisez le <strong>surlignage manuel</strong> exactement comme en mode PDF pour marquer une ou plusieurs cellules <strong>Montant</strong> et <strong>Lot</strong>.</span></li>
+              <li><b>5</b><span>Dans les deux cas, vérifiez la ligne produite, attribuez la bonne catégorie financière puis ajoutez-la au récapitulatif des données financières validées.</span></li>
+            </ol>
+            <div class="howto-examples">
+              <div class="howto-example">
+                <h4><span class="dot"></span>Exemple Excel : je coche une ligne</h4>
+                <div class="example-flow">
+                  <div class="example-doc">
+                    <div style="display:grid;grid-template-columns:22px 1.1fr .9fr;gap:4px;font-size:10px;align-items:center">
+                      <div style="font-weight:900">✓</div><div class="example-highlight lot" style="margin:0">Lot 03 - CVC</div><div class="example-highlight amount" style="margin:0">48 320,00 €</div>
+                      <div>☑</div><div style="padding:4px 0">ligne cochée</div><div style="padding:4px 0">remontée auto</div>
+                    </div>
+                  </div>
+                  <div class="example-arrow">→</div>
+                  <div class="example-result">
+                    <strong style="font-size:12px;color:var(--forest)">Ligne créée</strong>
+                    <div class="recap-line">
+                      <span class="recap-chip lot">Lot 03 - CVC</span>
+                      <span class="recap-chip amount">48 320,00 €</span>
+                      <span class="recap-chip cat">Travaux</span>
+                    </div>
+                  </div>
+                </div>
+                <p>Si les colonnes <strong>Lot</strong> et <strong>Montant</strong> sont bien repérées, une simple coche sur la ligne suffit pour remonter la donnée.</p>
+              </div>
+              <div class="howto-example">
+                <h4><span class="dot"></span>Exemple Excel : je surligne manuellement</h4>
+                <div class="example-flow">
+                  <div class="example-doc">
+                    <span class="example-highlight lot">Honoraires MOE</span>
+                    <span class="example-highlight amount">16 800,00 €</span>
+                  </div>
+                  <div class="example-arrow">→</div>
+                  <div class="example-result">
+                    <strong style="font-size:12px;color:var(--forest)">Ligne créée</strong>
+                    <div class="recap-line">
+                      <span class="recap-chip lot">Honoraires MOE</span>
+                      <span class="recap-chip amount">16 800,00 €</span>
+                      <span class="recap-chip cat">Maîtrise d’œuvre</span>
+                    </div>
+                  </div>
+                </div>
+                <p>Si votre tableau n’est pas structuré, utilisez le <strong>surlignage manuel</strong> cellule par cellule comme dans le PDF.</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="workflow-legend">
-          <div><b>PDF</b><span>Surlignez le montant HT et le N° / nom du lot dans l’aperçu.</span></div>
-          <div><b>Excel</b><span>Collez un tableau ou déposez un fichier : utilisez soit les colonnes Lot / Montant + coches, soit le surlignage manuel cellule par cellule.</span></div>
-          <div><b>Validation</b><span>Chaque montant validé rejoint le récapitulatif financier commun en bas de l’étape suivante.</span></div>
+
+        <div class="howto-tips">
+          <div class="tip"><b>Astuce</b><span>Toutes les lignes validées se retrouvent ensuite dans le <strong>récapitulatif des données financières validées</strong>, où elles peuvent encore être modifiées ou supprimées.</span></div>
         </div>
       </div>
     </section>
@@ -448,6 +627,8 @@
               <div class="dpgf-viewer-toolbar">
                 <div class="dpgf-file-picker"><label for="dpgfVisualFile">Document affiché</label><select id="dpgfVisualFile"></select></div>
                 <div class="dpgf-page-nav"><button class="btn ghost" id="dpgfPrevPage" type="button">←</button><strong id="dpgfPageInfo">Page 1 / 1</strong><button class="btn ghost" id="dpgfNextPage" type="button">→</button></div>
+                <button class="btn secondary" id="dpgfFullscreenBtn" type="button">⛶ Plein écran</button>
+                <span class="dpgf-fullscreen-badge">Mode plein écran</span>
                 <button class="btn ghost" id="dpgfOcrPage" type="button">OCR de cette page</button>
                 <button class="btn ghost" id="clearDpgf" type="button">Vider les PDF</button>
               </div>
@@ -458,7 +639,7 @@
                   <div id="dpgfPdfTextLayer" class="dpgf-pdf-text-layer"></div>
                 </div>
               </div>
-              <div class="tiny dpgf-viewer-hint">Cliquez directement sur les mots ou nombres du PDF. Pour une sélection composée de plusieurs fragments, maintenez <strong>Maj</strong> ou <strong>Ctrl/Cmd</strong>.</div>
+              <div class="tiny dpgf-viewer-hint"><strong>Surlignage précis :</strong> activez d’abord « Valeur HT » ou « N° / nom du lot », puis cliquez sur le fragment voulu. Vous pouvez <strong>maintenir le clic et glisser</strong> sur plusieurs fragments. Pour compléter une sélection existante, utilisez aussi <strong>Maj</strong> ou <strong>Ctrl/Cmd</strong>.</div>
             </div>
 
             <div class="dpgf-pick-panel">
@@ -487,7 +668,7 @@
 
       <div class="card hidden" id="sheetPasteBlock">
         <h2>3. Données financières - Excel</h2>
-        <p class="help">Déposez un fichier Excel ou copiez-collez une plage depuis Excel / Google Sheets. Deux méthodes sont disponibles : <strong>repérage des colonnes + coches par ligne</strong>, ou <strong>surlignage manuel</strong> du montant et du lot, comme dans le PDF.</p>
+        <p class="help">Déposez un fichier Excel ou copiez-collez une plage depuis Excel / Google Sheets. Les cellules de formule sont recalculées à partir des cellules sources, même entre plusieurs feuilles. Deux méthodes sont disponibles : <strong>repérage des colonnes + coches par ligne</strong>, ou <strong>surlignage manuel</strong> du montant et du lot, comme dans le PDF.</p>
 
         <div class="excel-source-grid">
           <div class="excel-drop" id="excelDropZone">
@@ -501,6 +682,14 @@
             <label>Ou collez directement votre tableau</label>
             <textarea id="sheetPasteInput" class="sheet-paste-input" placeholder="Cliquez ici puis Ctrl+V / Cmd+V depuis Excel ou Google Sheets…"></textarea>
             <div class="toolbar"><button class="btn primary" id="parseSheetPaste" type="button">Afficher le tableau collé</button><button class="btn ghost" id="clearSheetPaste" type="button">Vider</button></div>
+          </div>
+        </div>
+
+        <div id="excelSheetPickerWrap" class="excel-sheet-picker hidden">
+          <div><label for="excelSheetPicker">Feuille du classeur à afficher</label><select id="excelSheetPicker"></select></div>
+          <div>
+            <div id="excelSheetPickerHelp" class="tiny">Choisissez la feuille contenant les données financières à renseigner. Vous pouvez changer de feuille à tout moment : les données déjà validées restent conservées dans le récapitulatif.</div>
+            <div id="excelFormulaSummary" class="excel-formula-summary"></div>
           </div>
         </div>
 
@@ -661,6 +850,7 @@
   </main>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-calc@0.9.2/xlsx-calc.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -695,8 +885,9 @@ let currentStep=1, macroCounter=0, aidCounter=0;
 let financeSourceMode="pdf";
 let selectedDpgfFiles=[], dpgfAnalyses=[];
 let dpgfPdfDocs=new Map();
-let dpgfVisualState={fileIndex:0,page:1,totalPages:0,mode:'amount',amountTokens:[],lotTokens:[],currentItems:[],renderBusy:false,ocrPages:new Map()};
+let dpgfVisualState={fileIndex:0,page:1,totalPages:0,mode:'amount',amountTokens:[],lotTokens:[],currentItems:[],renderBusy:false,ocrPages:new Map(),itemMap:new Map(),dragging:false,dragVisited:new Set()};
 let sheetPasteData=[], selectedSheetCells=new Set(), sheetAllocations=[], sheetAllocationCounter=0, sheetCellMeta=new Map(), sheetRowMeta=[], sheetSourceMode="clipboard", sheetPdfSourceFiles=[], sheetExcelSourceFiles=[];
+let sheetExcelWorkbook=null, sheetExcelSheetNames=[], sheetExcelActiveSheet="";
 let sheetExcelMarkMode="amount", sheetExcelColumns={amount:null,lot:null}, sheetCheckedRows=new Set();
 let sheetExcelWorkMode="auto", sheetHighlightAmountCells=new Set(), sheetHighlightLotCells=new Set();
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1120,7 +1311,7 @@ function pickStructuredSet(groups){
 }
 async function analyzeSpreadsheet(file){
   if(!window.XLSX) throw new Error('Biblioth\u00e8que Excel indisponible. V\u00e9rifiez la connexion internet.');
-  const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const buf=await file.arrayBuffer(); const wb=XLSX.read(buf,{type:'array',cellDates:true,cellFormula:true,cellNF:true,cellText:true});
   let best=null, textSamples=[], structuredGroups=[], sheetTotals=[];
   for(const sheetName of wb.SheetNames){
     const rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,raw:true,defval:''});
@@ -1341,6 +1532,7 @@ function updateDpgfDraftUi(amountChanged=false){
   if($('#dpgfLotSelectionText'))$('#dpgfLotSelectionText').textContent=lText||'Aucun';
   if(amountChanged && aText){const n=parseMoneyValue(aText);if(Number.isFinite(n)&&n>0)$('#dpgfManualAmount').value=n.toFixed(2)}
   const mode=dpgfVisualState.mode;$$('.dpgfPickMode').forEach(b=>{const active=b.dataset.mode===mode;b.classList.toggle('active',active);b.classList.toggle('primary',active);b.classList.toggle('secondary',!active)});
+  const layer=$('#dpgfPdfTextLayer');if(layer){layer.classList.toggle('mode-amount',mode==='amount');layer.classList.toggle('mode-lot',mode==='lot')}
 }
 function applyDpgfTokenClasses(){
   $$('.dpgf-pdf-token').forEach(sp=>{const key=sp.dataset.key;sp.classList.toggle('sel-amount',hasDpgfToken(dpgfVisualState.amountTokens,key));sp.classList.toggle('sel-lot',hasDpgfToken(dpgfVisualState.lotTokens,key))});
@@ -1353,12 +1545,46 @@ function selectDpgfToken(item,event){
   }
   updateDpgfDraftUi(dpgfVisualState.mode==='amount');applyDpgfTokenClasses();
 }
+function splitDpgfSelectableText(text,left,width,page,startOrder,fontHeight){
+  const raw=String(text||'').replace(/\u00a0/g,' ').trim();
+  if(!raw)return {items:[],nextOrder:startOrder};
+  const rx=/[-+]?\d{1,3}(?:[ \u202f]\d{3})+(?:[,.]\d{1,2})?\s*(?:€|EUR)?|[-+]?\d+[,.]\d{2}\s*(?:€|EUR)?|[^\s]+/gi;
+  const matches=[...raw.matchAll(rx)];
+  if(matches.length<=1)return {items:[{key:dpgfTokenKey(page,startOrder,false),page,order:startOrder,text:raw,left,top:0,width,height:fontHeight,ocr:false}],nextOrder:startOrder+1};
+  const out=[];let order=startOrder;
+  matches.forEach(m=>{
+    const token=String(m[0]||'').trim();if(!token)return;
+    const start=Number(m.index)||0,end=start+m[0].length;
+    const tokenLeft=left+(width*(start/Math.max(1,raw.length)));
+    const tokenWidth=Math.max(6,width*((end-start)/Math.max(1,raw.length)));
+    out.push({key:dpgfTokenKey(page,order,false),page,order:order++,text:token,left:tokenLeft,top:0,width:tokenWidth,height:fontHeight,ocr:false});
+  });
+  return {items:out,nextOrder:order};
+}
+function addDpgfTokenDuringDrag(item,target){
+  if(!item)return;
+  const arr=dpgfVisualState.mode==='amount'?dpgfVisualState.amountTokens:dpgfVisualState.lotTokens;
+  if(hasDpgfToken(arr,item.key))return;
+  arr.push({key:item.key,page:item.page,order:item.order,text:item.text,ocr:!!item.ocr});
+  if(target)target.classList.add(dpgfVisualState.mode==='amount'?'sel-amount':'sel-lot');
+  updateDpgfDraftUi(dpgfVisualState.mode==='amount');
+}
+function setDpgfFullscreen(force){
+  const ws=document.querySelector('.dpgf-visual-workspace'),btn=$('#dpgfFullscreenBtn');if(!ws)return;
+  const next=typeof force==='boolean'?force:!ws.classList.contains('dpgf-fullscreen');
+  ws.classList.toggle('dpgf-fullscreen',next);document.body.classList.toggle('dpgf-fullscreen-open',next);
+  if(btn)btn.textContent=next?'✕ Quitter le plein écran':'⛶ Plein écran';
+  if(selectedDpgfFiles.length)setTimeout(()=>renderDpgfVisualPage(),80);
+}
 function renderDpgfTextOverlay(items,width,height){
-  const layer=$('#dpgfPdfTextLayer');layer.innerHTML='';layer.style.width=`${width}px`;layer.style.height=`${height}px`;dpgfVisualState.currentItems=items;
+  const layer=$('#dpgfPdfTextLayer');layer.innerHTML='';layer.style.width=`${width}px`;layer.style.height=`${height}px`;dpgfVisualState.currentItems=items;dpgfVisualState.itemMap=new Map(items.map(x=>[x.key,x]));
+  layer.classList.toggle('mode-amount',dpgfVisualState.mode==='amount');layer.classList.toggle('mode-lot',dpgfVisualState.mode==='lot');
   items.forEach(item=>{
-    const sp=document.createElement('span');sp.className='dpgf-pdf-token';sp.dataset.key=item.key;sp.title=item.text;sp.style.left=`${item.left}px`;sp.style.top=`${item.top}px`;sp.style.width=`${Math.max(5,item.width)}px`;sp.style.height=`${Math.max(7,item.height)}px`;sp.style.fontSize=`${Math.max(7,item.height)}px`;sp.textContent=item.text;
-    sp.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();selectDpgfToken(item,e)});layer.appendChild(sp);
-  });applyDpgfTokenClasses();
+    const sp=document.createElement('span');sp.className='dpgf-pdf-token';sp.dataset.key=item.key;sp.title=item.text;sp.style.left=`${item.left}px`;sp.style.top=`${item.top}px`;sp.style.width=`${Math.max(5,item.width)}px`;sp.style.height=`${Math.max(7,item.height)}px`;sp.style.fontSize=`${Math.max(7,item.height)}px`;sp.textContent=item.text;layer.appendChild(sp);
+  });
+  layer.onpointerdown=e=>{const sp=e.target.closest?.('.dpgf-pdf-token');if(!sp)return;e.preventDefault();e.stopPropagation();const item=dpgfVisualState.itemMap.get(sp.dataset.key);dpgfVisualState.dragging=true;dpgfVisualState.dragVisited=new Set([sp.dataset.key]);selectDpgfToken(item,e)};
+  layer.onpointerover=e=>{if(!dpgfVisualState.dragging)return;const sp=e.target.closest?.('.dpgf-pdf-token');if(!sp||dpgfVisualState.dragVisited.has(sp.dataset.key))return;dpgfVisualState.dragVisited.add(sp.dataset.key);addDpgfTokenDuringDrag(dpgfVisualState.itemMap.get(sp.dataset.key),sp)};
+  applyDpgfTokenClasses();
 }
 async function renderDpgfVisualPage(){
   if(dpgfVisualState.renderBusy||!selectedDpgfFiles.length)return;dpgfVisualState.renderBusy=true;
@@ -1374,8 +1600,8 @@ async function renderDpgfVisualPage(){
     if(cached){items=cached.map(x=>({...x}))}
     else{
       const tc=await page.getTextContent();let order=0;
-      (tc.items||[]).forEach(it=>{const text=String(it.str||'').trim();if(!text)return;const tx=pdfjsLib.Util.transform(viewport.transform,it.transform),fontHeight=Math.max(7,Math.hypot(tx[2],tx[3])),angle=Math.atan2(tx[1],tx[0]);let width=Math.max(5,(it.width||0)*scale);if(Math.abs(angle)>.05)width=Math.max(width,fontHeight);
-        items.push({key:dpgfTokenKey(dpgfVisualState.page,order,false),page:dpgfVisualState.page,order:order++,text,left:tx[4],top:tx[5]-fontHeight,width,height:fontHeight,ocr:false});});
+      (tc.items||[]).forEach(it=>{const raw=String(it.str||'').replace(/\u00a0/g,' ').trim();if(!raw)return;const tx=pdfjsLib.Util.transform(viewport.transform,it.transform),fontHeight=Math.max(7,Math.hypot(tx[2],tx[3])),angle=Math.atan2(tx[1],tx[0]);let width=Math.max(5,(it.width||0)*scale);if(Math.abs(angle)>.05)width=Math.max(width,fontHeight);
+        const split=splitDpgfSelectableText(raw,tx[4],width,dpgfVisualState.page,order,fontHeight);split.items.forEach(x=>{x.top=tx[5]-fontHeight;items.push(x)});order=split.nextOrder;});
     }
     renderDpgfTextOverlay(items,viewport.width,viewport.height);$('#dpgfPageInfo').textContent=`Page ${dpgfVisualState.page} / ${doc.numPages}`;$('#dpgfPrevPage').disabled=dpgfVisualState.page<=1;$('#dpgfNextPage').disabled=dpgfVisualState.page>=doc.numPages;
     status.innerHTML=items.length?`<span>✓</span><span>${escapeHtml(file.name)} · page ${dpgfVisualState.page}. Activez « Valeur HT » ou « N° / nom du lot », puis cliquez sur le texte à surligner.</span>`:`<span>⚠</span><span>Aucun texte sélectionnable sur cette page. Utilisez « OCR de cette page ».</span>`;
@@ -1458,7 +1684,15 @@ function parseClipboardTable(text){
   return rows.map(r=>Array.from({length:width},(_,i)=>String(r[i]??'').trim()));
 }
 function sheetCellKey(r,c){return `${r}:${c}`}
-function isUsedSheetCell(key){return sheetAllocations.some(a=>a.sourceCells.includes(key))}
+function currentExcelSheetName(){return sheetSourceMode==='excel-file'?(sheetExcelActiveSheet||sheetRowMeta.find(x=>x?.sheet)?.sheet||''):''}
+function allocationBelongsToCurrentSheet(a){
+  if(sheetSourceMode!=='excel-file')return true;
+  const active=currentExcelSheetName();if(!active)return true;
+  if(a?.sourceSheet)return a.sourceSheet===active;
+  const details=Array.isArray(a?.sourceDetails)?a.sourceDetails:[];
+  return details.some(d=>d?.feuille===active);
+}
+function isUsedSheetCell(key){return sheetAllocations.some(a=>allocationBelongsToCurrentSheet(a)&&Array.isArray(a.sourceCells)&&a.sourceCells.includes(key))}
 function sheetNumericValue(r,c){return parseMoneyValue(sheetPasteData?.[r]?.[c])}
 function isSelectableSheetNumeric(raw){
   let s=String(raw??'').trim(); if(!s)return false;
@@ -1468,7 +1702,7 @@ function isSelectableSheetNumeric(raw){
 function sheetCellDisplayRef(r,c){
   const meta=sheetCellMeta.get(sheetCellKey(r,c));
   if(meta?.sourceType==='pdf') return `${meta.fileName} · p.${meta.page} · ${spreadsheetColumnName(c)}${r+1}`;
-  if(meta?.sourceType==='excel') return `${meta.fileName}${meta.sheet?' · '+meta.sheet:''} · ${spreadsheetColumnName(c)}${r+1}`;
+  if(meta?.sourceType==='excel') return `${meta.fileName}${meta.sheet?' · '+meta.sheet:''} · ${meta.address||spreadsheetColumnName(c)+(r+1)}`;
   return `${spreadsheetColumnName(c)}${r+1}`;
 }
 function mountSheetSelectionBox(pdfMode){
@@ -1482,9 +1716,9 @@ function renderSheetSourceBanner(){
   if(!sheetPasteData.length){banner.classList.add('hidden');return}
   banner.classList.remove('hidden');
   if(sheetSourceMode==='excel-file'){
-    const sheets=[...new Set(sheetRowMeta.map(x=>x?.sheet).filter(Boolean))];
+    const active=currentExcelSheetName(),idx=Math.max(0,sheetExcelSheetNames.indexOf(active));
     $('#sheetSourceTitle').textContent='Fichier Excel chargé';
-    $('#sheetSourceDetail').textContent=`${sheetExcelSourceFiles[0]?.name||''} · ${sheets.length||1} feuille(s) · ${sheetPasteData.length} ligne(s)`;
+    $('#sheetSourceDetail').textContent=`${sheetExcelSourceFiles[0]?.name||''} · feuille « ${active||'-'} »${sheetExcelSheetNames.length?` (${idx+1}/${sheetExcelSheetNames.length})`:''} · ${sheetPasteData.length} ligne(s)`;
     $('#sheetSourceKind').textContent='Excel';
   }else{
     $('#sheetSourceTitle').textContent='Tableur copié-collé';
@@ -1549,13 +1783,13 @@ function addSheetHighlightAllocation(){
   const category=/Autre/.test(chosen)&&custom?custom:chosen;
   const allKeys=[...lotKeys,...amountKeys],sourceRefs=[...lotKeys.map(k=>{const [r,c]=k.split(':').map(Number);return `Lot : ${sheetCellDisplayRef(r,c)}`}),...amountKeys.map(k=>{const [r,c]=k.split(':').map(Number);return `Montant : ${sheetCellDisplayRef(r,c)}`})];
   const sourceDetails=allKeys.map(k=>{const [r,c]=k.split(':').map(Number),meta=sheetCellMeta.get(k)||{};return {type:meta.sourceType||sheetSourceMode,fichier:meta.fileName||'',feuille:meta.sheet||'',page:meta.page||null,ocr:!!meta.ocr}});
-  sheetAllocations.push({id:++sheetAllocationCounter,type,lot,category,amount,sourceCells:allKeys,sourceRefs,sourceValues:amountValues.map(x=>x.value),sourceDetails,comment:val('sheetHighlightComment'),manualHighlight:true});
+  sheetAllocations.push({id:++sheetAllocationCounter,type,lot,category,amount,sourceCells:allKeys,sourceRefs,sourceValues:amountValues.map(x=>x.value),sourceDetails,comment:val('sheetHighlightComment'),manualHighlight:true,sourceSheet:currentExcelSheetName()});
   sheetHighlightAmountCells.clear();sheetHighlightLotCells.clear();$('#sheetHighlightFreeLotLabel').value='';$('#sheetHighlightComment').value='';
   renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();syncFinalCost();updateSheetHighlightUi();
 }
 function rebuildAutoSheetRows(){
-  const rows=[...sheetCheckedRows];
-  sheetAllocations=sheetAllocations.filter(a=>!a.autoRow);
+  const rows=[...sheetCheckedRows],activeSheet=currentExcelSheetName();
+  sheetAllocations=sheetAllocations.filter(a=>!(a.autoRow&&((a.sourceSheet||'')===activeSheet || (!a.sourceSheet&&allocationBelongsToCurrentSheet(a)))));
   rows.forEach(r=>createAutoSheetAllocation(r,false));
   renderSheetAllocations();renderFinancialRecap();updateControl();syncFinalCost();
 }
@@ -1569,7 +1803,7 @@ function setExcelMappedColumn(c){
 }
 function clearExcelColumnMarks(){
   if(sheetExcelWorkMode==='highlight'){sheetHighlightAmountCells.clear();sheetHighlightLotCells.clear();renderSheetGrid();updateExcelMarkUi();return}
-  sheetExcelColumns={amount:null,lot:null};sheetCheckedRows.clear();sheetAllocations=sheetAllocations.filter(a=>!a.autoRow);renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();syncFinalCost();updateExcelMarkUi();
+  const activeSheet=currentExcelSheetName();sheetExcelColumns={amount:null,lot:null};sheetCheckedRows.clear();sheetAllocations=sheetAllocations.filter(a=>!(a.autoRow&&((a.sourceSheet||'')===activeSheet || (!a.sourceSheet&&allocationBelongsToCurrentSheet(a)))));renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();syncFinalCost();updateExcelMarkUi();
 }
 function rowCanAutoImport(r){
   if(sheetExcelColumns.amount==null||sheetExcelColumns.lot==null)return false;
@@ -1578,14 +1812,15 @@ function rowCanAutoImport(r){
   return !rm?.separator && !!lot && Number.isFinite(amount) && amount!==0;
 }
 function createAutoSheetAllocation(r,rerender=true){
-  sheetAllocations=sheetAllocations.filter(a=>!(a.autoRow&&a.sourceRow===r));
+  const activeSheet=currentExcelSheetName();
+  sheetAllocations=sheetAllocations.filter(a=>!(a.autoRow&&a.sourceRow===r&&((a.sourceSheet||'')===activeSheet || (!a.sourceSheet&&allocationBelongsToCurrentSheet(a)))));
   if(!sheetCheckedRows.has(r)||!rowCanAutoImport(r)){sheetCheckedRows.delete(r);if(rerender){renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();syncFinalCost()}return}
   const lotCol=sheetExcelColumns.lot, amountCol=sheetExcelColumns.amount;
   const lot=String(sheetPasteData?.[r]?.[lotCol]??'').trim(), amount=sheetNumericValue(r,amountCol);
   const lotKey=sheetCellKey(r,lotCol),amountKey=sheetCellKey(r,amountCol), meta=sheetCellMeta.get(amountKey)||sheetCellMeta.get(lotKey)||{};
   const type=val('sheetAllocationType')||'Travaux', chosen=val('sheetAllocationLot')||'Travaux';
   const category=/Autre/.test(chosen)&&val('sheetCustomLabel').trim()?val('sheetCustomLabel').trim():chosen;
-  sheetAllocations.push({id:++sheetAllocationCounter,type,lot,category,amount,sourceCells:[lotKey,amountKey],sourceRefs:[`Lot : ${sheetCellDisplayRef(r,lotCol)}`,`Montant : ${sheetCellDisplayRef(r,amountCol)}`],sourceValues:[amount],sourceDetails:[{type:meta.sourceType||sheetSourceMode,fichier:meta.fileName||'',feuille:meta.sheet||'',page:meta.page||null,ocr:!!meta.ocr}],comment:'',autoRow:true,sourceRow:r});
+  sheetAllocations.push({id:++sheetAllocationCounter,type,lot,category,amount,sourceCells:[lotKey,amountKey],sourceRefs:[`Lot : ${sheetCellDisplayRef(r,lotCol)}`,`Montant : ${sheetCellDisplayRef(r,amountCol)}`],sourceValues:[amount],sourceDetails:[{type:meta.sourceType||sheetSourceMode,fichier:meta.fileName||'',feuille:meta.sheet||'',page:meta.page||null,ocr:!!meta.ocr}],comment:'',autoRow:true,sourceRow:r,sourceSheet:activeSheet});
   if(rerender){renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();syncFinalCost()}
 }
 function toggleExcelRow(r,checked){if(checked)sheetCheckedRows.add(r);else sheetCheckedRows.delete(r);createAutoSheetAllocation(r,true)}
@@ -1604,9 +1839,10 @@ function renderSheetGrid(){
     html+=`<tr class="${!manual&&checked?'row-validated':''}"><td class="row-head ${rm?.page?'pdf-row':''}" title="${escapeHtml(rowTitle)}">${checkHtml}${rm?.ocr?'<span class="pdf-ocr-badge">OCR</span>':''}</td>`;
     for(let c=0;c<width;c++){
       const raw=String(row[c]??''), numeric=isSelectableSheetNumeric(raw), meta=sheetCellMeta.get(sheetCellKey(r,c)),key=sheetCellKey(r,c);
-      const cls=['sheet-cell'];if(numeric)cls.push('numeric');if(meta?.sourceType==='pdf')cls.push('pdf-source');if(!manual&&c===sheetExcelColumns.amount)cls.push('excel-amount-col');if(!manual&&c===sheetExcelColumns.lot)cls.push('excel-lot-col');if(manual&&sheetHighlightAmountCells.has(key))cls.push('excel-highlight-amount');if(manual&&sheetHighlightLotCells.has(key))cls.push('excel-highlight-lot');
-      const title=meta?.sourceType==='pdf'?`${meta.fileName} · page ${meta.page} · ${raw}`:raw;
-      html+=`<td class="${cls.join(' ')}" data-r="${r}" data-c="${c}" title="${escapeHtml(title)}">${escapeHtml(raw||'')}</td>`;
+      const cls=['sheet-cell'];if(numeric)cls.push('numeric');if(meta?.sourceType==='pdf')cls.push('pdf-source');if(meta?.isFormula)cls.push('excel-formula-cell');if(!manual&&c===sheetExcelColumns.amount)cls.push('excel-amount-col');if(!manual&&c===sheetExcelColumns.lot)cls.push('excel-lot-col');if(manual&&sheetHighlightAmountCells.has(key))cls.push('excel-highlight-amount');if(manual&&sheetHighlightLotCells.has(key))cls.push('excel-highlight-lot');
+      const title=meta?.sourceType==='pdf'?`${meta.fileName} · page ${meta.page} · ${raw}`:meta?.isFormula?`${meta.fileName||''}${meta.sheet?' · '+meta.sheet:''}${meta.address?' · '+meta.address:''} · Formule =${meta.formula} · Résultat : ${raw||'vide'}${meta.formulaFallback?' · recalculé dans le navigateur':''}`:raw;
+      const formulaBadge=meta?.isFormula?'<span class="excel-formula-badge">ƒx</span>':'';
+      html+=`<td class="${cls.join(' ')}" data-r="${r}" data-c="${c}" title="${escapeHtml(title)}">${escapeHtml(raw||'')}${formulaBadge}</td>`;
     }
     html+='</tr>';
   });
@@ -1657,32 +1893,171 @@ function resetSheetWorkspace({keepPdfFiles=false}={}){
   if(!keepPdfFiles){sheetPdfSourceFiles=[];const input=$('#pdfTableFiles');if(input)input.value='';renderPdfTableQueue()}
   renderSheetGrid();renderSheetAllocations();updateControl();syncFinalCost();renderFinancialRecap();
 }
+function resetExcelWorkbookPicker(){
+  sheetExcelWorkbook=null;sheetExcelSheetNames=[];sheetExcelActiveSheet='';
+  const wrap=$('#excelSheetPickerWrap'),sel=$('#excelSheetPicker'),fs=$('#excelFormulaSummary');if(wrap)wrap.classList.add('hidden');if(sel)sel.innerHTML='';if(fs)fs.innerHTML='';
+}
 function parseSheetPaste(){
   const parsed=parseClipboardTable(val('sheetPasteInput'));
-  sheetSourceMode='clipboard'; sheetExcelSourceFiles=[]; sheetCellMeta.clear(); sheetRowMeta=[]; selectedSheetCells.clear(); sheetAllocations=[]; sheetExcelColumns={amount:null,lot:null}; sheetCheckedRows.clear(); sheetHighlightAmountCells.clear(); sheetHighlightLotCells.clear(); sheetExcelWorkMode="auto";
+  sheetSourceMode='clipboard'; sheetExcelSourceFiles=[]; resetExcelWorkbookPicker(); sheetCellMeta.clear(); sheetRowMeta=[]; selectedSheetCells.clear(); sheetAllocations=[]; sheetExcelColumns={amount:null,lot:null}; sheetCheckedRows.clear(); sheetHighlightAmountCells.clear(); sheetHighlightLotCells.clear(); sheetExcelWorkMode="auto";
   const input=$('#excelFileInput');if(input)input.value=''; if($('#excelFileState'))$('#excelFileState').textContent='Aucun fichier chargé.';
   sheetPasteData=parsed;
   renderSheetGrid();renderSheetAllocations();updateControl();syncFinalCost();renderFinancialRecap();
+}
+function populateExcelSheetPicker(){
+  const wrap=$('#excelSheetPickerWrap'),sel=$('#excelSheetPicker');if(!wrap||!sel)return;
+  if(!sheetExcelWorkbook||!sheetExcelSheetNames.length){wrap.classList.add('hidden');sel.innerHTML='';return}
+  sel.innerHTML=sheetExcelSheetNames.map((name,i)=>`<option value="${escapeHtml(name)}" ${name===sheetExcelActiveSheet?'selected':''}>${i+1}. ${escapeHtml(name)}</option>`).join('');
+  wrap.classList.remove('hidden');
+  const help=$('#excelSheetPickerHelp');if(help)help.textContent=sheetExcelSheetNames.length>1?`${sheetExcelSheetNames.length} feuilles détectées. Choisissez celle à afficher ; les données déjà validées dans les autres feuilles restent conservées.`:'1 seule feuille détectée dans ce fichier.';
+}
+function excelFormulaSheetName(raw,currentSheet){
+  const s=String(raw||'').trim();
+  if(!s)return currentSheet;
+  return s.replace(/^'/,'').replace(/'$/,'').replace(/''/g,"'");
+}
+function excelCellRawValue(sheetName,address,seen=new Set()){
+  if(!sheetExcelWorkbook||!sheetExcelWorkbook.Sheets?.[sheetName])return null;
+  const addr=String(address||'').replace(/\$/g,'').toUpperCase(),key=`${sheetName}!${addr}`;
+  if(seen.has(key))return null;
+  const ws=sheetExcelWorkbook.Sheets[sheetName],cell=ws[addr];
+  if(!cell)return null;
+  // Certains classeurs stockent une formule mais aucun résultat en cache (<v></v>).
+  // On recalcule donc d'abord toute formule que notre moteur sait traiter, même si SheetJS expose 0.
+  if(cell.f){
+    const next=new Set(seen);next.add(key);
+    const computed=excelEvaluateFormula(cell.f,sheetName,next);
+    if(computed!==null&&computed!==undefined&&Number.isFinite(Number(computed)))return Number(computed);
+  }
+  if(cell.v!==undefined&&cell.v!==null&&cell.v!=='')return cell.v;
+  return null;
+}
+function excelFormulaRefValue(token,currentSheet,seen){
+  const m=String(token||'').trim().match(/^(?:(?:'((?:[^']|'')+)'|([^!]+))!)?\$?([A-Z]{1,3})\$?(\d+)(?::\$?([A-Z]{1,3})\$?(\d+))?$/i);
+  if(!m)return NaN;
+  const sheet=excelFormulaSheetName(m[1]||m[2],currentSheet),start=`${m[3].toUpperCase()}${m[4]}`;
+  if(!m[5]){const v=excelCellRawValue(sheet,start,seen);const n=Number(v);return Number.isFinite(n)?n:0}
+  const finish=`${m[5].toUpperCase()}${m[6]}`,range=XLSX.utils.decode_range(`${start}:${finish}`);let sum=0;
+  for(let r=range.s.r;r<=range.e.r;r++)for(let c=range.s.c;c<=range.e.c;c++){
+    const v=excelCellRawValue(sheet,XLSX.utils.encode_cell({r,c}),seen),n=Number(v);if(Number.isFinite(n))sum+=n;
+  }
+  return sum;
+}
+function excelSplitFormulaArgs(s){
+  const out=[];let cur='',depth=0,quote=false;
+  for(const ch of String(s||'')){
+    if(ch==="'")quote=!quote;
+    if(!quote&&ch==='(')depth++;else if(!quote&&ch===')')depth--;
+    if(!quote&&depth===0&&(ch===';'||ch===',')){out.push(cur.trim());cur=''}else cur+=ch;
+  }
+  if(cur.trim()||!out.length)out.push(cur.trim());return out;
+}
+function excelEvaluateCondition(condition,currentSheet,seen){
+  const raw=String(condition||'').trim();
+  const m=raw.match(/^(.*?)(<>|>=|<=|=|>|<)(.*?)$/);
+  if(!m){const v=excelEvaluateFormula(raw,currentSheet,seen);return !!Number(v)}
+  const a=excelEvaluateFormula(m[1],currentSheet,seen),b=excelEvaluateFormula(m[3],currentSheet,seen),op=m[2];
+  if(a===null||b===null)return false;
+  if(op==='=')return a===b;if(op==='<>')return a!==b;if(op==='>=')return a>=b;if(op==='<=')return a<=b;if(op==='>')return a>b;if(op==='<')return a<b;
+  return false;
+}
+function excelEvaluateFormula(formula,currentSheet,seen=new Set()){
+  let expr=String(formula||'').trim().replace(/^=/,'');if(!expr)return null;
+  expr=expr.replace(/\bSOMME\s*\(/gi,'SUM(').replace(/\bSOUS\.TOTAL\s*\(/gi,'SUBTOTAL(').replace(/\bSI\s*\(/gi,'IF(');
+  let prev='';
+  while(expr!==prev){
+    prev=expr;
+    expr=expr.replace(/SUM\(([^()]*)\)/gi,(all,args)=>String(excelSplitFormulaArgs(args).reduce((sum,arg)=>{
+      const ref=excelFormulaRefValue(arg,currentSheet,seen);if(Number.isFinite(ref))return sum+ref;
+      const v=excelEvaluateFormula(arg,currentSheet,seen);return sum+(Number.isFinite(Number(v))?Number(v):0);
+    },0)));
+    expr=expr.replace(/SUBTOTAL\(([^()]*)\)/gi,(all,args)=>{
+      const parts=excelSplitFormulaArgs(args),fn=Number(parts.shift());if(fn!==9&&fn!==109)return '0';
+      return String(parts.reduce((sum,arg)=>{const ref=excelFormulaRefValue(arg,currentSheet,seen);if(Number.isFinite(ref))return sum+ref;const v=excelEvaluateFormula(arg,currentSheet,seen);return sum+(Number.isFinite(Number(v))?Number(v):0)},0));
+    });
+    expr=expr.replace(/IF\(([^()]*)\)/gi,(all,args)=>{
+      const parts=excelSplitFormulaArgs(args);if(parts.length<2)return all;
+      const ok=excelEvaluateCondition(parts[0],currentSheet,seen),chosen=ok?parts[1]:(parts[2]??'0'),v=excelEvaluateFormula(chosen,currentSheet,seen);
+      return v===null?all:String(v);
+    });
+  }
+  const direct=excelFormulaRefValue(expr,currentSheet,seen);if(Number.isFinite(direct))return direct;
+  const refs=/(?:(?:'((?:[^']|'')+)'|([^!+\-*/(),;=<>]+))!)?\$?[A-Z]{1,3}\$?\d+/gi;
+  expr=expr.replace(refs,tok=>{const n=excelFormulaRefValue(tok,currentSheet,seen);return Number.isFinite(n)?String(n):'0'});
+  expr=expr.replace(/(\d+(?:[.,]\d+)?)%/g,(_,n)=>`(${String(n).replace(',','.')}/100)`).replace(/,/g,'.').replace(/\^/g,'**');
+  if(!/^[0-9eE+\-*/().\s*]+$/.test(expr))return null;
+  try{const v=Function(`"use strict";return (${expr})`)();return Number.isFinite(Number(v))?Number(v):null}catch(e){return null}
+}
+function excelDisplayValue(cell,sheetName,address){
+  if(!cell)return {display:'',value:null,isFormula:false,formula:'',fallback:false};
+  const isFormula=!!cell.f;
+  let value=cell.v;
+  let fallback=false;
+  // Après recalcul du classeur à l'import, la valeur de référence est simplement cell.v.
+  // Le petit moteur historique n'est utilisé qu'en secours si aucune valeur n'a été produite.
+  if(isFormula && (value===undefined||value===null||value==='')){
+    const recalculated=excelEvaluateFormula(cell.f,sheetName,new Set([`${sheetName}!${address}`]));
+    if(recalculated!==null&&recalculated!==undefined&&Number.isFinite(Number(recalculated))){
+      value=Number(recalculated);fallback=true;
+    }
+  }
+  let display='';
+  if(value instanceof Date)display=value.toLocaleDateString('fr-FR');
+  else if(typeof value==='number'&&Number.isFinite(value))display=value.toLocaleString('fr-FR',{maximumFractionDigits:6});
+  else if(value!==undefined&&value!==null)display=String(value);
+  return {display:String(display).trim(),value,isFormula,formula:cell.f||'',fallback};
+}
+function renderExcelSheet(sheetName,{preserveAllocations=true}={}){
+  if(!sheetExcelWorkbook||!sheetExcelSheetNames.includes(sheetName))return;
+  sheetExcelActiveSheet=sheetName;
+  const file=sheetExcelSourceFiles[0],ws=sheetExcelWorkbook.Sheets[sheetName],ref=ws?.['!ref'];
+  const rows=[],rowMeta=[],cellMeta=new Map();let formulaCount=0,fallbackCount=0;
+  if(ref){
+    const range=XLSX.utils.decode_range(ref);
+    for(let rr=range.s.r;rr<=range.e.r;rr++){
+      const rowIndex=rows.length,row=[];rowMeta.push({fileName:file?.name||'',sheet:sheetName,excelRow:rr+1});
+      for(let cc=range.s.c;cc<=range.e.c;cc++){
+        const address=XLSX.utils.encode_cell({r:rr,c:cc}),cell=ws[address],info=excelDisplayValue(cell,sheetName,address),display=info.display,key=sheetCellKey(rowIndex,cc-range.s.c);
+        row.push(display);
+        cellMeta.set(key,{sourceType:'excel',fileName:file?.name||'',sheet:sheetName,address,isFormula:info.isFormula,formula:info.formula,formulaFallback:info.fallback,rawValue:info.value});
+        if(info.isFormula){formulaCount++;if(info.fallback)fallbackCount++}
+      }
+      rows.push(row);
+    }
+  }
+  sheetSourceMode='excel-file';sheetPasteData=rows;sheetRowMeta=rowMeta;sheetCellMeta=cellMeta;selectedSheetCells.clear();
+  if(!preserveAllocations)sheetAllocations=[];
+  sheetExcelColumns={amount:null,lot:null};sheetCheckedRows.clear();sheetHighlightAmountCells.clear();sheetHighlightLotCells.clear();sheetExcelWorkMode="auto";
+  $('#sheetPasteInput').value='';populateExcelSheetPicker();
+  const fs=$('#excelFormulaSummary');if(fs)fs.innerHTML=formulaCount?`<span class="formula-chip">ƒx ${formulaCount} cellule(s) calculée(s)</span>${fallbackCount?`<span class="formula-chip">${fallbackCount} résultat(s) recalculé(s)</span>`:''}<span>Les cellules de formule sont mises en valeur, mais la grille utilise directement leur valeur calculée comme un montant normal.</span>`:'<span>Aucune cellule de formule détectée sur cette feuille.</span>';
+  renderSheetGrid();renderSheetAllocations();updateControl();syncFinalCost();renderFinancialRecap();updateExcelMarkUi();
 }
 async function loadExcelFile(file){
   if(!file)return;
   if(!window.XLSX){alert('Bibliothèque Excel indisponible. Vérifiez votre connexion internet.');return}
   try{
-    const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:true});
-    const rows=[],rowMeta=[],cellMeta=new Map();
-    wb.SheetNames.forEach((sheetName,si)=>{
-      const data=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{header:1,raw:false,defval:'',blankrows:false});
-      if(si>0 && rows.length){rows.push([]);rowMeta.push({fileName:file.name,sheet:sheetName,separator:true})}
-      data.forEach(r=>{
-        const rr=(r||[]).map(v=>String(v??'').trim());
-        const rowIndex=rows.length;rows.push(rr);rowMeta.push({fileName:file.name,sheet:sheetName});
-        rr.forEach((_,c)=>cellMeta.set(sheetCellKey(rowIndex,c),{sourceType:'excel',fileName:file.name,sheet:sheetName}));
-      });
-    });
-    sheetSourceMode='excel-file';sheetExcelSourceFiles=[file];sheetPasteData=rows;sheetRowMeta=rowMeta;sheetCellMeta=cellMeta;selectedSheetCells.clear();sheetAllocations=[];sheetExcelColumns={amount:null,lot:null};sheetCheckedRows.clear();sheetHighlightAmountCells.clear();sheetHighlightLotCells.clear();sheetExcelWorkMode="auto";
-    $('#sheetPasteInput').value='';$('#excelFileState').innerHTML=`<strong>${escapeHtml(file.name)}</strong> · ${(file.size/1024/1024).toFixed(2)} Mo`;
-    renderSheetGrid();renderSheetAllocations();updateControl();syncFinalCost();renderFinancialRecap();
-  }catch(e){alert('Lecture du fichier Excel impossible : '+(e?.message||String(e)))}
+    const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:true,cellFormula:true,cellNF:true,cellStyles:true});
+    if(!wb.SheetNames?.length)throw new Error('Aucune feuille trouvée dans ce fichier.');
+
+    // Recalcule le classeur AVANT l'affichage. Ensuite la grille lit uniquement la valeur de cellule (cell.v).
+    let calcStatus='';
+    const calcFn=window.XLSX_CALC||window.xlsxCalc||window.XlsxCalc;
+    if(typeof calcFn==='function'){
+      try{
+        calcFn(wb,{continue_after_error:true,log_error:false});
+        calcStatus=' · valeurs de formules recalculées';
+      }catch(calcErr){
+        console.warn('Recalcul Excel partiel :',calcErr);
+        calcStatus=' · recalcul partiel';
+      }
+    }else{
+      calcStatus=' · moteur de calcul indisponible, valeurs enregistrées utilisées';
+    }
+
+    sheetExcelWorkbook=wb;sheetExcelSheetNames=[...wb.SheetNames];sheetExcelActiveSheet=sheetExcelSheetNames[0];sheetExcelSourceFiles=[file];sheetAllocations=[];
+    $('#excelFileState').innerHTML=`<strong>${escapeHtml(file.name)}</strong> · ${(file.size/1024/1024).toFixed(2)} Mo · ${sheetExcelSheetNames.length} feuille(s)${escapeHtml(calcStatus)}`;
+    renderExcelSheet(sheetExcelActiveSheet,{preserveAllocations:false});
+  }catch(e){resetExcelWorkbookPicker();alert('Lecture du fichier Excel impossible : '+(e?.message||String(e)))}
 }
 function pdfSplitCellText(text){
   const t=String(text||'').replace(/\s+/g,' ').trim(); if(!t)return [];
@@ -2220,6 +2595,7 @@ $('#dpgfFile').addEventListener('change',e=>addDpgfFiles(e.target.files));
 $('#dpgfVisualFile').addEventListener('change',e=>openDpgfVisualFile(Number(e.target.value)||0));
 $('#dpgfPrevPage').addEventListener('click',()=>{if(dpgfVisualState.page>1){dpgfVisualState.page--;renderDpgfVisualPage()}});
 $('#dpgfNextPage').addEventListener('click',()=>{if(dpgfVisualState.page<dpgfVisualState.totalPages){dpgfVisualState.page++;renderDpgfVisualPage()}});
+$('#dpgfFullscreenBtn').addEventListener('click',()=>setDpgfFullscreen());
 $('#dpgfOcrPage').addEventListener('click',ocrCurrentDpgfPage);
 $$('.dpgfPickMode').forEach(b=>b.addEventListener('click',()=>{dpgfVisualState.mode=b.dataset.mode;updateDpgfDraftUi()}));
 $('#clearDpgfAmountSelection').addEventListener('click',()=>{dpgfVisualState.amountTokens=[];$('#dpgfManualAmount').value='';updateDpgfDraftUi();applyDpgfTokenClasses()});
@@ -2235,8 +2611,9 @@ dpgfDrop.addEventListener('drop',e=>addDpgfFiles(e.dataTransfer.files));
 
 $('#parseSheetPaste').addEventListener('click',parseSheetPaste);
 $('#sheetPasteInput').addEventListener('paste',()=>setTimeout(parseSheetPaste,0));
-$('#clearSheetPaste').addEventListener('click',()=>{$('#sheetPasteInput').value='';sheetSourceMode='clipboard';sheetExcelSourceFiles=[];sheetPasteData=[];selectedSheetCells.clear();sheetAllocations=[];sheetCellMeta.clear();sheetRowMeta=[];sheetExcelColumns={amount:null,lot:null};sheetCheckedRows.clear();sheetHighlightAmountCells.clear();sheetHighlightLotCells.clear();sheetExcelWorkMode="auto";renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();updateExcelMarkUi()});
+$('#clearSheetPaste').addEventListener('click',()=>{$('#sheetPasteInput').value='';sheetSourceMode='clipboard';sheetExcelSourceFiles=[];resetExcelWorkbookPicker();sheetPasteData=[];selectedSheetCells.clear();sheetAllocations=[];sheetCellMeta.clear();sheetRowMeta=[];sheetExcelColumns={amount:null,lot:null};sheetCheckedRows.clear();sheetHighlightAmountCells.clear();sheetHighlightLotCells.clear();sheetExcelWorkMode="auto";renderSheetGrid();renderSheetAllocations();renderFinancialRecap();updateControl();updateExcelMarkUi()});
 $('#excelFileInput').addEventListener('change',e=>loadExcelFile(e.target.files?.[0]));
+$('#excelSheetPicker').addEventListener('change',e=>{const next=e.target.value;if(next&&next!==sheetExcelActiveSheet)renderExcelSheet(next,{preserveAllocations:true})});
 const excelDrop=$('#excelDropZone');
 ['dragenter','dragover'].forEach(ev=>excelDrop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();excelDrop.classList.add('dragover')}));
 ['dragleave','drop'].forEach(ev=>excelDrop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();excelDrop.classList.remove('dragover')}));
@@ -2260,6 +2637,8 @@ $('#downloadDpgfCsv').onclick=()=>{const d=collect();downloadBlob(new Blob([buil
 $('#printBtn').onclick=()=>{renderFinal();requestAnimationFrame(()=>setTimeout(()=>window.print(),120))};
 
 let dpgfResizeTimer=null;window.addEventListener('resize',()=>{if(!selectedDpgfFiles.length)return;clearTimeout(dpgfResizeTimer);dpgfResizeTimer=setTimeout(()=>renderDpgfVisualPage(),180)});
+window.addEventListener('pointerup',()=>{dpgfVisualState.dragging=false;dpgfVisualState.dragVisited=new Set()});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.dpgf-visual-workspace')?.classList.contains('dpgf-fullscreen'))setDpgfFullscreen(false)});
 initDpgfManualCategory();initSheetAllocationTypes();updateExcelMarkUi();renderDpgfQueue();renderSheetGrid();renderSheetAllocations();renderSheetSourceBanner();setFinanceSource('pdf');syncFinalCost();updateAids();updateFileConsentState();renderFinancialRecap();updateControl();
 
 </script>
