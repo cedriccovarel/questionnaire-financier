@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prestaterre — Questionnaire financier MOA V0.36</title>
+  <title>Prestaterre — Questionnaire financier MOA V0.37</title>
   <style>
     :root{
       --forest:#173f35; --forest-2:#0f2f28; --sage:#dce9e2; --mint:#eef6f1;
@@ -395,6 +395,42 @@
       .control-breakdown{grid-template-columns:1fr}
     }
 
+  
+
+    /* V0.37 - finition UX professionnelle, sans modification des workflows */
+    body{background:#f2f6f4;color:#1d2925}
+    main{padding:28px 30px 36px;max-width:1480px}
+    .topbar{background:rgba(255,255,255,.94);border:1px solid #dfe8e3;border-radius:18px;padding:18px 20px;box-shadow:0 10px 30px rgba(23,63,53,.055);align-items:center;margin-bottom:18px}
+    .topbar h1{font-size:27px;letter-spacing:-.025em;color:#173f35;margin-bottom:5px}
+    .topbar .subtitle{font-size:13px;color:#697a72}
+    .badge{background:#edf5f1;color:#173f35;border:1px solid #cfe0d8;padding:8px 12px;font-size:10.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;box-shadow:none}
+    .progress{height:5px;border-radius:999px;background:#dfe8e3;margin:0 4px 24px;overflow:hidden}
+    #progressBar{border-radius:999px;background:linear-gradient(90deg,#173f35,#4f7d6d)}
+    .card{border-color:#dfe8e3;border-radius:17px;box-shadow:0 9px 28px rgba(23,63,53,.06);padding:25px 26px}
+    .card h2{color:#173f35;font-size:19px;letter-spacing:-.015em}
+    .card p.help{color:#687970;line-height:1.5}
+    input,select,textarea{border-color:#cfdcd5;background:#fff;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
+    input:focus,select:focus,textarea:focus{border-color:#6e9a86;box-shadow:0 0 0 3px rgba(23,63,53,.08);outline:none}
+    .btn{border-radius:10px;font-weight:800;letter-spacing:.005em;transition:transform .14s ease,box-shadow .14s ease,background .14s ease}
+    .btn:not(:disabled):hover{transform:translateY(-1px)}
+    .btn.primary{box-shadow:0 5px 14px rgba(23,63,53,.13)}
+    .table-wrap{border:1px solid #dfe8e3;border-radius:13px;background:#fff}
+    table thead th{background:#f1f6f3;color:#3c544a;font-size:10.5px;text-transform:uppercase;letter-spacing:.045em}
+    table tbody tr{transition:background .12s ease}
+    table tbody tr:hover{background:#fafcfb}
+    .finance-recap-card{border-top:4px solid #173f35;background:linear-gradient(180deg,#fff,#fcfefd)}
+    .finance-recap-total{background:#173f35;color:#fff;border:0;box-shadow:0 8px 20px rgba(23,63,53,.13)}
+    .finance-recap-table select{min-width:165px;font-weight:750;color:#173f35;background:#f7faf8}
+    .sheet-type-pill{background:#e7f0eb;color:#173f35;border:1px solid #cbdcd3}
+    .consent-card{border-color:#cfe0d8;background:#f7fbf9}
+    .alert.ok{border-color:#b9d8c6;background:#f2faf5}
+    .alert.warn{border-color:#eadcb4;background:#fffaf0}
+    aside{box-shadow:8px 0 28px rgba(15,47,40,.10)}
+    .step{border:1px solid transparent;transition:background .16s ease,border-color .16s ease,color .16s ease}
+    .step.active{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.12)}
+    .step.done b{box-shadow:0 0 0 2px rgba(215,240,225,.12)}
+    @media(max-width:900px){main{padding:18px}.topbar{padding:16px}.topbar h1{font-size:23px}}
+
   </style>
 </head>
 <body>
@@ -418,7 +454,7 @@
   </aside>
 
   <main>
-    <div class="topbar"><div><h1>Questionnaire financier d'opération</h1><p class="subtitle">Collecte des coûts travaux, études et acquisition pour l'Observatoire Prestaterre</p></div><div class="badge">MAQUETTE V0.36</div></div>
+    <div class="topbar"><div><h1>Questionnaire financier d'opération</h1><p class="subtitle">Observatoire du bâtiment durable · Prestaterre Certifications</p></div><div class="badge">Observatoire financier</div></div>
     <div class="progress"><div id="progressBar"></div></div>
 
     <section class="section active" data-step="1">
@@ -761,7 +797,7 @@
         <div id="financialRecapEmpty" class="alert warn">Aucune donnée financière validée pour le moment.</div>
         <div id="financialRecapWrap" class="table-wrap hidden">
           <table>
-            <thead><tr><th>Source</th><th>Nature</th><th>N° / nom du lot ou poste</th><th>Catégorie financière</th><th>Montant HT</th><th>Commentaire</th><th>Action</th></tr></thead>
+            <thead><tr><th>Source</th><th>N° / nom du lot ou poste</th><th>Catégorie financière</th><th>Montant HT</th><th>Commentaire</th><th>Action</th></tr></thead>
             <tbody id="financialRecapBody"></tbody>
           </table>
         </div>
@@ -2197,27 +2233,26 @@ function sumLots(){return 0}
 function sumMacro(){return 0}
 function validatedFinanceRows(){
   const pdf=dpgfAnalyses.map((a,i)=>({a,i})).filter(x=>x.a.status==='ok'&&x.a.integrate&&(Number(x.a.amount)||0)>0).map(({a,i})=>({
-    key:`pdf:${i}`,sourceKind:'pdf',sourceIndex:i,source:'PDF',nature:a.natureOverride||financialNatureForCategory(a.category),lot:a.sourceLotLabel||a.sourceLotId||a.category,categorie:a.category||'Autres',montant:Number(a.amount)||0,commentaire:a.comment||'',fichier:a.fileName||''
+    key:`pdf:${i}`,sourceKind:'pdf',sourceIndex:i,source:'PDF',lot:a.sourceLotLabel||a.sourceLotId||a.category,categorie:a.category||a.natureOverride||'Autres',montant:Number(a.amount)||0,commentaire:a.comment||'',fichier:a.fileName||''
   }));
   const excel=sheetAllocations.filter(a=>(Number(a.amount)||0)>0).map(a=>({
-    key:`excel:${a.id}`,sourceKind:'excel',sourceId:a.id,source:'Excel',nature:a.type||'Autres',lot:a.lot||a.category,categorie:a.category||a.type||'Autres',montant:Number(a.amount)||0,commentaire:a.comment||'',fichier:(a.sourceDetails||[]).map(s=>s.fichier).filter(Boolean).join(', ')
+    key:`excel:${a.id}`,sourceKind:'excel',sourceId:a.id,source:'Excel',lot:a.lot||a.category,categorie:a.category||a.type||'Autres',montant:Number(a.amount)||0,commentaire:a.comment||'',fichier:(a.sourceDetails||[]).map(s=>s.fichier).filter(Boolean).join(', ')
   }));
   return [...pdf,...excel];
 }
 function financeTotals(){
   const rows=validatedFinanceRows(),byNature={};
-  rows.forEach(r=>byNature[r.nature]=(byNature[r.nature]||0)+r.montant);
+  rows.forEach(r=>{const category=r.categorie||'Autres';byNature[category]=(byNature[category]||0)+r.montant});
   return {rows,total:rows.reduce((s,r)=>s+r.montant,0),byNature,works:byNature['Travaux']||0};
 }
 function updateValidatedFinanceRow(key,field,value){
+  if(field!=='categorie')return;
   if(String(key).startsWith('pdf:')){
     const i=Number(String(key).split(':')[1]),a=dpgfAnalyses[i];if(!a)return;
-    if(field==='nature')a.natureOverride=value;
-    if(field==='categorie')a.category=value;
+    a.category=value;a.natureOverride=value;
   }else if(String(key).startsWith('excel:')){
     const id=Number(String(key).split(':')[1]),a=sheetAllocations.find(x=>x.id===id);if(!a)return;
-    if(field==='nature')a.type=value;
-    if(field==='categorie')a.category=value;
+    a.category=value;a.type=value;
   }
   renderSheetAllocations();renderDpgfResults();renderFinancialRecap();updateControl();syncFinalCost();
 }
@@ -2241,10 +2276,9 @@ function renderFinancialRecap(){
   totalEl.textContent=euros(total);
   empty.classList.toggle('hidden',rows.length>0);wrap.classList.toggle('hidden',rows.length===0);
   wrap.querySelector('table')?.classList.add('finance-recap-table');
-  body.innerHTML=rows.map(r=>`<tr data-key="${escapeHtml(r.key)}"><td><span class="sheet-type-pill">${escapeHtml(r.source)}</span>${r.fichier?`<div class="tiny">${escapeHtml(r.fichier)}</div>`:''}</td><td><select class="recapNature">${financialNatureOptionsHtml(r.nature)}</select></td><td><strong>${escapeHtml(r.lot||'—')}</strong></td><td><select class="recapCategory">${financialOptionsHtml(r.categorie)}</select></td><td class="amount"><strong>${euros(r.montant)}</strong></td><td>${escapeHtml(r.commentaire||'')}</td><td><button class="btn danger recap-delete" type="button" title="Supprimer cette donnée">×</button></td></tr>`).join('');
+  body.innerHTML=rows.map(r=>`<tr data-key="${escapeHtml(r.key)}"><td><span class="sheet-type-pill">${escapeHtml(r.source)}</span>${r.fichier?`<div class="tiny">${escapeHtml(r.fichier)}</div>`:''}</td><td><strong>${escapeHtml(r.lot||'—')}</strong></td><td><select class="recapCategory">${financialOptionsHtml(r.categorie)}</select></td><td class="amount"><strong>${euros(r.montant)}</strong></td><td>${escapeHtml(r.commentaire||'')}</td><td><button class="btn danger recap-delete" type="button" title="Supprimer cette donnée">×</button></td></tr>`).join('');
   $$('#financialRecapBody tr').forEach(tr=>{
     const key=tr.dataset.key;
-    tr.querySelector('.recapNature').onchange=e=>updateValidatedFinanceRow(key,'nature',e.target.value);
     tr.querySelector('.recapCategory').onchange=e=>updateValidatedFinanceRow(key,'categorie',e.target.value);
     tr.querySelector('.recap-delete').onclick=()=>deleteValidatedFinanceRow(key);
   });
@@ -2381,9 +2415,9 @@ function printPageFooterHtml(){
 }
 function financeChartsHtml(d){
   const rows=d.financier.lignesValidees||[];
-  const worksMap={};rows.filter(r=>r.nature==='Travaux'||r.categorie==='Travaux').forEach(r=>{const k=r.lot||'Travaux non précisés';worksMap[k]=(worksMap[k]||0)+Number(r.montant||0)});
+  const worksMap={};rows.filter(r=>r.categorie==='Travaux').forEach(r=>{const k=r.lot||'Travaux non précisés';worksMap[k]=(worksMap[k]||0)+Number(r.montant||0)});
   const worksItems=Object.entries(worksMap).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value);
-  const categoryMap={};rows.forEach(r=>{const k=r.categorie||r.nature||'Autres';categoryMap[k]=(categoryMap[k]||0)+Number(r.montant||0)});
+  const categoryMap={};rows.forEach(r=>{const k=r.categorie||'Autres';categoryMap[k]=(categoryMap[k]||0)+Number(r.montant||0)});
   const categoryItems=Object.entries(categoryMap).map(([label,value])=>({label,value})).filter(x=>x.value>0).sort((a,b)=>b.value-a.value);
   const op=Number(d.financier.montantTotalOperation)||0,aids=Number(d.aides.total)||0,remaining=Math.max(op-aids,0);
   const fundingItems=op?[{label:'Aides / financements mobilisés',value:Math.min(aids,op)},{label:'Reste à financer / autres ressources',value:remaining}].filter(x=>x.value>0):[];
@@ -2392,7 +2426,7 @@ function financeChartsHtml(d){
 function financeTablePagesHtml(rows,total){
   if(!rows.length)return `<div class="final-page table-page">${printPageHeaderHtml('Données financières','Aucune donnée validée')}<div class="alert warn">Aucune donnée financière validée.</div>${printPageFooterHtml()}</div>`;
   const chunks=splitRowsForPrint(rows,12);
-  return chunks.map((chunk,i)=>`<div class="final-page table-page">${printPageHeaderHtml('Données financières validées',chunks.length>1?`Tableau ${i+1} sur ${chunks.length}`:'Tableau consolidé')}<div class="print-table-title"><h3>Données financières validées${chunks.length>1?` - ${i+1}/${chunks.length}`:''}</h3><span class="tiny">${chunk.length} ligne(s)</span></div><div class="table-wrap"><table class="final-detail-table"><colgroup><col style="width:11%"><col style="width:12%"><col style="width:25%"><col style="width:17%"><col style="width:15%"><col style="width:20%"></colgroup><thead><tr><th>Source</th><th>Nature</th><th>Lot / poste</th><th>Catégorie</th><th>Montant HT</th><th>Commentaire</th></tr></thead><tbody>${chunk.map(r=>`<tr><td>${escapeHtml(r.source)}</td><td>${escapeHtml(r.nature)}</td><td><strong>${escapeHtml(r.lot||'—')}</strong></td><td>${escapeHtml(r.categorie||'—')}</td><td class="amount">${euros(r.montant)}</td><td>${escapeHtml(r.commentaire||'')}</td></tr>`).join('')}${i===chunks.length-1?`<tr class="print-total-row"><td colspan="4"><strong>Total opération</strong></td><td class="amount"><strong>${euros(total)}</strong></td><td></td></tr>`:''}</tbody></table></div>${printPageFooterHtml()}</div>`).join('');
+  return chunks.map((chunk,i)=>`<div class="final-page table-page">${printPageHeaderHtml('Données financières validées',chunks.length>1?`Tableau ${i+1} sur ${chunks.length}`:'Tableau consolidé')}<div class="print-table-title"><h3>Données financières validées${chunks.length>1?` - ${i+1}/${chunks.length}`:''}</h3><span class="tiny">${chunk.length} ligne(s)</span></div><div class="table-wrap"><table class="final-detail-table"><colgroup><col style="width:13%"><col style="width:29%"><col style="width:21%"><col style="width:17%"><col style="width:20%"></colgroup><thead><tr><th>Source</th><th>Lot / poste</th><th>Catégorie financière</th><th>Montant HT</th><th>Commentaire</th></tr></thead><tbody>${chunk.map(r=>`<tr><td>${escapeHtml(r.source)}</td><td><strong>${escapeHtml(r.lot||'—')}</strong></td><td>${escapeHtml(r.categorie||'—')}</td><td class="amount">${euros(r.montant)}</td><td>${escapeHtml(r.commentaire||'')}</td></tr>`).join('')}${i===chunks.length-1?`<tr class="print-total-row"><td colspan="3"><strong>Total opération</strong></td><td class="amount"><strong>${euros(total)}</strong></td><td></td></tr>`:''}</tbody></table></div>${printPageFooterHtml()}</div>`).join('');
 }
 function aidsTablePagesHtml(aids){
   if(!aids.length)return `<div class="final-page table-page">${printPageHeaderHtml('Aides mobilisées','Financements et subventions')}<div class="print-table-title"><h3>Aides mobilisées</h3></div><div class="alert warn">Aucune aide renseignée.</div>${printPageFooterHtml()}</div>`;
@@ -2408,10 +2442,10 @@ function renderFinal(){
   $('#finalSummary').innerHTML=overview+financeTablePagesHtml(rows,d.financier.montantTotalOperation)+aidsTablePagesHtml(d.aides.lignes)+financeChartsHtml(d);
 }
 function buildFinancialValidatedCsv(rows=validatedFinanceRows()){
-  const header=['Source','Nature','N° et nom du lot / poste','Catégorie','Montant HT (€)','Fichier source','Commentaire'];
+  const header=['Source','N° et nom du lot / poste','Catégorie financière','Montant HT (€)','Fichier source','Commentaire'];
   const lines=[header.map(csvCell).join(';')];
-  rows.forEach(r=>lines.push([r.source,r.nature,r.lot,r.categorie,Number(r.montant).toFixed(2).replace('.',','),r.fichier||'',r.commentaire||''].map(csvCell).join(';')));
-  lines.push(['','','','TOTAL',rows.reduce((s,r)=>s+Number(r.montant||0),0).toFixed(2).replace('.',','),'',''].map(csvCell).join(';'));
+  rows.forEach(r=>lines.push([r.source,r.lot,r.categorie,Number(r.montant).toFixed(2).replace('.',','),r.fichier||'',r.commentaire||''].map(csvCell).join(';')));
+  lines.push(['','TOTAL','',rows.reduce((s,r)=>s+Number(r.montant||0),0).toFixed(2).replace('.',','),'',''].map(csvCell).join(';'));
   return '\ufeff'+lines.join('\r\n');
 }
 function safeBaseName(){return ((val('opeName')||'questionnaire-moa').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'')||'questionnaire-moa')}
