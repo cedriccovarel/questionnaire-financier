@@ -1,42 +1,17 @@
-# Bêta Gmail - Questionnaire financier Prestaterre V0.29
+# Installation V0.56 — GitHub Pages
 
-Cette version ne nécessite aucun backend, aucun Google Apps Script et aucune clé.
+1. Remplacer l'ancien `index.html` par celui de la V0.56.
+2. Publier normalement via GitHub Pages.
+3. Au premier chargement, faire un rechargement forcé (`Cmd + Shift + R` sur Mac ou `Ctrl + F5` sur Windows).
 
-## 1. Adresse de réception
+Les brouillons créés en V0.49 à V0.55 sont repris tels quels.
 
-Cette version est déjà configurée pour envoyer les questionnaires à :
+## Brouillons
+Les données restent locales au navigateur : IndexedDB contient l'état complet et les documents dans les limites prévues, avec localStorage en secours. Le bouton `Sauvegarder brouillon` exporte un `.ptdraft` portable réimportable depuis l'écran `Mes opérations`.
 
-`cedric.covarel@prestaterre.eu`
+Une donnée financière validée n'est supprimée que par le bouton × du récapitulatif.
 
-## 2. Publier sur GitHub Pages
+## Envoi (unitaire ou groupé)
+Depuis l'étape 6 ou depuis `Mes opérations` > `Envoyer par mail`, le ZIP est téléchargé localement puis la messagerie s'ouvre ; il reste à joindre le ZIP au message.
 
-Remplacer l'ancien `index.html` de la bêta par ce fichier puis pousser la mise à jour sur GitHub Pages.
-
-## 3. Ce que fait le bouton d'envoi
-
-Le bouton `Préparer et envoyer par e-mail` :
-
-1. génère le bilan Prestaterre en PDF ;
-2. génère le CSV exploitable des données financières ;
-3. ajoute le JSON complet ;
-4. ajoute les PDF / Excel sources autorisés dans la limite bêta ;
-5. fabrique et télécharge un seul fichier ZIP ;
-6. ouvre Gmail dans un nouvel onglet avec le destinataire, l'objet et le message préremplis.
-
-Le répondant doit seulement joindre le ZIP téléchargé au mail puis cliquer sur Envoyer.
-
-## Limites bêta
-
-- 8 Mo maximum par fichier source ;
-- 12 Mo maximum de sources cumulées dans le ZIP ;
-- les fichiers dépassant ces seuils sont omis du ZIP et signalés dans le message ;
-- le PDF, le CSV et le JSON restent générés.
-
-## Si Gmail ne s'ouvre pas
-
-Le site affiche deux liens de secours après la préparation :
-
-- `ouvrir Gmail` ;
-- `ouvrir le logiciel de messagerie` via `mailto:`.
-
-Aucune pièce jointe ne peut être ajoutée automatiquement à Gmail par une simple page web : le ZIP doit être joint manuellement, ce qui est la seule action restant au répondant.
+Après envoi, l'opération est marquée **Déjà envoyée** : sa tuile est grisée et elle n'est plus cochable dans l'envoi groupé. Pour la corriger, cliquer sur l'icône crayon de la tuile ; un avertissement rappelle que le dossier devra être renvoyé.
