@@ -1,3 +1,17 @@
+# Questionnaire financier Prestaterre — V0.57
+
+## Fichiers Excel sources : décharger ou supprimer
+- Chaque classeur chargé (étape des coûts, source Excel) a deux boutons à côté de son nom.
+  - **⏏ Décharger** : retire le fichier, et garde les lignes déjà validées à partir de ce fichier.
+  - **🗑 Supprimer** : retire le fichier et les lignes validées qui en viennent, après confirmation.
+- Si le classeur retiré était affiché, le classeur restant s'affiche à sa place ; s'il n'en reste aucun, la grille est vidée.
+- Le fichier retiré n'est plus joint au brouillon enregistré ni à l'envoi.
+
+## Stratégie de financement
+- « Aides non remboursables » devient **« Aides »** : tuile de l'encart, lecture automatique et alertes, et partie « Stratégie de financement » du bilan PDF (« Part des aides / coût total »).
+
+---
+
 # Questionnaire financier Prestaterre — V0.56
 
 ## Numéro d'opération SIAP : un seul par opération
