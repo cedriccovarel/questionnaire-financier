@@ -1,3 +1,22 @@
+# Questionnaire financier Prestaterre — V0.58
+
+## Importer une opération en cours (bouton « Importer un brouillon »)
+- Le bouton accepte maintenant, en plus du brouillon `.ptdraft` :
+  - le **JSON du questionnaire** (« Télécharger le JSON », ou le JSON contenu dans le zip d'envoi) ;
+  - un état enregistré (JSON avec `forms`).
+- Le JSON du questionnaire est reconstruit en brouillon :
+  - identification (contrat, n° d'opération, commune, n° SIAP) ;
+  - lignes validées (DPGF, tableur, saisie manuelle) ;
+  - aides et nombre de logements ;
+  - couverture et commentaires ;
+  - coût final ;
+  - consentements.
+- Les fichiers PDF / Excel ne sont pas contenus dans ce JSON : un message le signale à l'import. Les lignes déjà validées sont reprises, et il suffit de rajouter les fichiers pour les rouvrir.
+- Avant, un fichier non reconnu affichait « Format non reconnu ». Le message explique maintenant le format attendu, et l'import réussi est confirmé.
+- Correctif : après réouverture d'une opération, les nouvelles lignes reçoivent un identifiant distinct des lignes existantes.
+
+---
+
 # Questionnaire financier Prestaterre — V0.57
 
 ## Fichiers Excel sources : décharger ou supprimer
